@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { MousePointer2, Pen, Highlighter, Eraser, Type, FunctionSquare, Download, Eye, EyeOff, X, Upload, Settings2, RotateCcw, RotateCw } from 'lucide-react';
 import { useEditor, type Tool } from '../store/EditorContext';
 import { CanvasLayer } from './CanvasLayer';
@@ -34,12 +34,7 @@ const EditorLayout: React.FC = () => {
   const documentContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+
 
   const tools = [
     { id: 'select' as Tool, icon: MousePointer2, label: 'Select' },
