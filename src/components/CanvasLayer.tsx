@@ -1,4 +1,4 @@
-import React, { useRef, useLayoutEffect, useState } from 'react';
+import React, { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { Stage, Layer, Path, Text, Image as KonvaImage } from 'react-konva';
 import { useEditor, type Point } from '../store/EditorContext';
 import { getStroke } from 'perfect-freehand';
@@ -82,6 +82,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const isDrawing = useRef(false);
   const currentPoints = useRef<Point[]>([]);
+  const stageRef = useRef<any>(null);
   const layerRef = useRef<any>(null);
   const drawingPathRef = useRef<any>(null);
 
@@ -94,22 +95,49 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     return window.innerWidth < 768 ? 0.7 : 1;
   }, [size.width]);
 
+  // Production Debug Alert
+  useEffect(() => {
+    window.alert('Stage Ready');
+    console.log('CanvasLayer production engine initialized');
+  }, []);
+
   useLayoutEffect(() => {
     if (!containerRef.current) return;
-    const observer = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        setSize({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
-      }
-    });
+    const updateSize = () => {
+      const rect = containerRef.current!.getBoundingClientRect();
+      setSize({
+        width: rect.width,
+        height: rect.height,
+      });
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
     observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    window.addEventListener('resize', updateSize);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateSize);
+    };
   }, [containerRef]);
 
-  const handlePointerDown = (e: KonvaEventObject<PointerEvent>) => {
-    const pos = e.target.getStage()?.getPointerPosition();
+  const getRelativePointerPosition = () => {
+    const stage = stageRef.current;
+    if (!stage) return null;
+
+    // Absolute pointer position from Konva
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return null;
+    // Safety check: ensure coordinates are relative to the Stage container
+    return {
+      x: pointer.x,
+      y: pointer.y
+    };
+  };
+
+  const handlePointerDown = () => {
+    const pos = getRelativePointerPosition();
     if (!pos) return;
 
     if (activeTool === 'pen' || activeTool === 'highlighter') {
@@ -122,7 +150,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   const handlePointerMove = (e: KonvaEventObject<PointerEvent>) => {
     if (!isDrawing.current) return;
     e.evt.preventDefault();
-    const pos = e.target.getStage()?.getPointerPosition();
+    const pos = getRelativePointerPosition();
     if (!pos) return;
 
     currentPoints.current.push([pos.x, pos.y]);
@@ -170,8 +198,8 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     layerRef.current.batchDraw();
   };
 
-  const handleStageClick = (e: KonvaEventObject<MouseEvent>) => {
-    const pos = e.target.getStage()?.getPointerPosition();
+  const handleStageClick = () => {
+    const pos = getRelativePointerPosition();
     if (!pos) return;
 
     if (activeTool === 'select') {
@@ -292,12 +320,15 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   const canInteractWithAnnotations = activeTool === 'select' || activeTool === 'eraser';
 
   return (
-    <div className="absolute inset-0 z-10 pointer-events-auto">
+    <div
+      className="absolute inset-0 z-[999] pointer-events-auto"
+      style={{ touchAction: 'none', width: '100%', height: '100%' }}
+    >
       <Stage
+        ref={stageRef}
         width={size.width}
         height={size.height}
         className="w-full h-full origin-top-left"
-        style={{ touchAction: (activeTool === 'pen' || activeTool === 'highlighter') ? 'none' : 'pan-y !important' as any }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -349,7 +380,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
                   y={anno.y * size.height}
                   text={anno.text}
                   fill={anno.color}
-                  fontSize={anno.fontSize * responsiveScale}
+                  fontSize={anno.fontSize}
                   fontFamily="Geist"
                   fontStyle="600"
                   draggable={activeTool === 'select'}
@@ -400,7 +431,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
       {textInput && (
         <div
           className={cn(
-            "z-[100] pointer-events-auto",
+            "z-[1000] pointer-events-auto",
             window.innerWidth < 768
               ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] bg-white/90 backdrop-blur-2xl p-6 rounded-[32px] shadow-[0_40px_100px_rgba(0,0,0,0.2)] border border-white/40"
               : "absolute bg-white/80 backdrop-blur-xl p-3 rounded-2xl shadow-xl border border-white/50"
@@ -426,7 +457,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
       {mathInput && (
         <div
           className={cn(
-            "bg-white/90 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_100px_rgba(0,0,0,0.18)] border border-white/50 flex flex-col gap-4 z-[100] pointer-events-auto",
+            "bg-white/90 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_100px_rgba(0,0,0,0.18)] border border-white/50 flex flex-col gap-4 z-[1000] pointer-events-auto",
             window.innerWidth < 768 ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] p-6 scale-90" : "absolute p-6"
           )}
           style={window.innerWidth < 768 ? {} : { top: mathInput.y + 10, left: mathInput.x, transform: 'translateX(-50%)' }}
