@@ -1,4 +1,4 @@
-import React, { useRef, useLayoutEffect, useState } from 'react';
+import React, { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { Stage, Layer, Path, Text, Image as KonvaImage } from 'react-konva';
 import { useEditor, type Point } from '../store/EditorContext';
 import { getStroke } from 'perfect-freehand';
@@ -95,10 +95,20 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     return window.innerWidth < 768 ? 0.7 : 1;
   }, [size.width]);
 
+  // Production Debug Logs
+  useEffect(() => {
+    console.log('CanvasLayer Engine Initialized. Active Tool:', activeTool);
+  }, [activeTool]);
+
+  useEffect(() => {
+    console.log('Current Annotations Status:', annotations.length, 'entries');
+  }, [annotations]);
+
   useLayoutEffect(() => {
     if (!containerRef.current) return;
     const updateSize = () => {
       const { clientWidth, clientHeight } = containerRef.current!;
+      console.log('Stage Resize Triggered:', { clientWidth, clientHeight });
       setSize({ width: clientWidth, height: clientHeight });
     };
 
@@ -149,6 +159,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   };
 
   const handlePointerUp = () => {
+    console.log('Pointer Up. isDrawing:', isDrawing.current);
     if (!isDrawing.current) return;
     isDrawing.current = false;
 
@@ -191,6 +202,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
   const handleStageClick = () => {
     const pos = getRelativePointerPosition();
+    console.log('Stage Click/Tap Detected at:', pos, 'Tool:', activeTool);
     if (!pos) return;
 
     if (activeTool === 'select') {
@@ -299,7 +311,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   return (
     <div
       className="absolute inset-0 z-[9999] pointer-events-auto"
-      style={{ touchAction: 'none' }}
+      style={{ touchAction: 'none', border: '2px dashed #ef4444' }}
     >
       <Stage
         ref={stageRef}
