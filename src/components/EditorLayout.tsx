@@ -163,7 +163,8 @@ const EditorLayout: React.FC = () => {
             className={cn(
               "w-full bg-white rounded-[32px] lg:rounded-[24px] overflow-hidden relative transition-all duration-500",
               "shadow-[0_20px_50px_rgba(0,0,0,0.1)] lg:shadow-[0_8px_30px_rgba(0,0,0,0.04)]",
-              !backgroundImage && "aspect-[1/1.7] sm:aspect-[1/1.414]"
+              !backgroundImage && "aspect-[1/1.7] sm:aspect-[1/1.414]",
+              "lg:mb-32" // Prevent canvas extending behind the fixed dock on desktop
             )}
             style={{
               display: 'flex',
@@ -219,7 +220,7 @@ const EditorLayout: React.FC = () => {
       </main>
 
       {/* Universal Premium Dock */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9998] w-fit max-w-[95%] pointer-events-none">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[10000] w-fit max-w-[95%] pointer-events-none">
         <motion.nav
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

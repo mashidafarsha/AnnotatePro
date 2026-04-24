@@ -95,9 +95,8 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     return window.innerWidth < 768 ? 0.7 : 1;
   }, [size.width]);
 
-  // Production Debug Alert
+  // Production Debug Log
   useEffect(() => {
-    window.alert('Stage Ready');
     console.log('CanvasLayer production engine initialized');
   }, []);
 
@@ -154,11 +153,13 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     if (!pos) return;
 
     currentPoints.current.push([pos.x, pos.y]);
+    console.log('Drawing stroke:', currentPoints.current);
     updateDrawingPath();
   };
 
   const handlePointerUp = () => {
     if (!isDrawing.current) return;
+    console.log('Stroke completed:', currentPoints.current);
     isDrawing.current = false;
 
     if (currentPoints.current.length > 0 && size.width > 0 && size.height > 0) {
@@ -321,7 +322,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
   return (
     <div
-      className="absolute inset-0 z-[999] pointer-events-auto"
+      className="absolute inset-0 lg:bottom-32 z-[9999] pointer-events-auto"
       style={{ touchAction: 'none', width: '100%', height: '100%' }}
     >
       <Stage

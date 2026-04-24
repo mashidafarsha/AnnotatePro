@@ -32,4 +32,8 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #cbd5e1;
   }
+
+  .konvajs-content {
+    touch-action: none !important;
+  }
 }
