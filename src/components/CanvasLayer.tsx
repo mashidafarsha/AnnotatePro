@@ -135,7 +135,12 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
   const handlePointerMove = (e: KonvaEventObject<PointerEvent>) => {
     if (!isDrawing.current) return;
-    e.evt.preventDefault();
+
+    // Only prevent default when actively drawing to avoid blocking browser interactions
+    if (e.evt.cancelable) {
+      e.evt.preventDefault();
+    }
+
     const pos = getRelativePointerPosition();
     if (!pos) return;
 
@@ -292,7 +297,10 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   const canInteractWithAnnotations = activeTool === 'select' || activeTool === 'eraser';
 
   return (
-    <div className="absolute inset-0 z-10 pointer-events-auto" style={{ touchAction: 'none' }}>
+    <div
+      className="absolute inset-0 z-[9999] pointer-events-auto"
+      style={{ touchAction: 'none' }}
+    >
       <Stage
         ref={stageRef}
         width={size.width}

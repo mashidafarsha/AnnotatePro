@@ -219,7 +219,7 @@ const EditorLayout: React.FC = () => {
       </main>
 
       {/* Universal Premium Dock */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-fit max-w-[95%] pointer-events-none">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[10000] w-fit max-w-[95%] pointer-events-none">
         <motion.nav
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
