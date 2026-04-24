@@ -51,16 +51,16 @@ interface EditorContextType {
   backgroundImage: string | null;
   setBackgroundImage: (url: string | null) => void;
   clearAnnotations: () => void;
-  
+
   selectedAnnotationId: string | null;
   setSelectedAnnotationId: (id: string | null) => void;
-  
+
   annotations: Annotation[];
   addAnnotation: (annotation: Annotation) => void;
   updateAnnotation: (id: string, updates: Partial<Annotation>) => void;
   removeAnnotation: (id: string) => void;
   toggleVisibility: (id: string) => void;
-  
+
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
@@ -74,7 +74,7 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [color, setColor] = useState('#2563eb'); // blue-600
   const [strokeWidth, setStrokeWidth] = useState(2.5);
   const [backgroundImage, setBackgroundImage] = useState<string | null>('/blueprint.png');
-  
+
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
 
   const [historyState, setHistoryState] = useState<{ history: Annotation[], redoStack: Annotation[] }>({
@@ -97,7 +97,7 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const updateAnnotation = useCallback((id: string, updates: Partial<Annotation>) => {
     setHistoryState((prev) => ({
-      history: prev.history.map(a => 
+      history: prev.history.map(a =>
         a.id === id ? { ...a, ...updates } as Annotation : a
       ),
       redoStack: [],
@@ -113,7 +113,7 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const toggleVisibility = useCallback((id: string) => {
     setHistoryState((prev) => ({
-      history: prev.history.map(a => 
+      history: prev.history.map(a =>
         a.id === id ? { ...a, visible: a.visible === false ? true : false } : a
       ),
       redoStack: [],
@@ -126,7 +126,7 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const newHistory = [...prev.history];
       const popped = newHistory.pop();
       if (!popped) return prev;
-      
+
       return {
         history: newHistory,
         redoStack: [...prev.redoStack, popped]
@@ -140,7 +140,7 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const newRedo = [...prev.redoStack];
       const popped = newRedo.pop();
       if (!popped) return prev;
-      
+
       return {
         history: [...prev.history, popped],
         redoStack: newRedo
@@ -163,14 +163,14 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo]);
 
   return (
-    <EditorContext.Provider 
-      value={{ 
+    <EditorContext.Provider
+      value={{
         activeTool, setActiveTool, color, setColor, strokeWidth, setStrokeWidth,
         backgroundImage, setBackgroundImage, clearAnnotations,
         selectedAnnotationId, setSelectedAnnotationId,

@@ -25,10 +25,10 @@ export function getSvgPathFromStroke(stroke: number[][]) {
   return d.join(' ');
 }
 
-const MathNode = ({ 
-  annotation, size, scaleFactor, onPointerDown, onMouseEnter, onMouseLeave, onDragStart, onDragEnd, listening 
-}: { 
-  annotation: any; size: {width: number, height: number}; scaleFactor: number;
+const MathNode = ({
+  annotation, size, scaleFactor, onPointerDown, onMouseEnter, onMouseLeave, onDragStart, onDragEnd, listening
+}: {
+  annotation: any; size: { width: number, height: number }; scaleFactor: number;
   onPointerDown: any; onMouseEnter: any; onMouseLeave: any; onDragStart?: any; onDragEnd?: any; listening?: boolean;
 }) => {
   const [img] = useImage(annotation.imageSrc);
@@ -66,7 +66,7 @@ const MathNode = ({
 };
 
 export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
-  const { 
+  const {
     activeTool, color, strokeWidth, annotations, addAnnotation, updateAnnotation, removeAnnotation,
     selectedAnnotationId, setSelectedAnnotationId
   } = useEditor();
@@ -86,7 +86,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
   const isDrawing = useRef(false);
   const currentPoints = useRef<Point[]>([]);
-  
+
   const layerRef = useRef<any>(null);
   const drawingPathRef = useRef<any>(null);
 
@@ -98,7 +98,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
-    
+
     // Initial size calculation for production stability
     setSize({
       width: containerRef.current.clientWidth,
@@ -198,7 +198,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
       smoothing: 0.5,
       streamline: 0.5,
     });
-    
+
     const pathData = getSvgPathFromStroke(strokeOutline);
     drawingPathRef.current.data(pathData);
     drawingPathRef.current.fill(color);
@@ -213,7 +213,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     } else if (activeTool === 'select') {
       e.cancelBubble = true;
       setSelectedAnnotationId(id);
-      
+
       const node = e.target;
       node.to({
         scaleX: 1.08,
@@ -268,7 +268,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
       setMathInput(null);
       return;
     }
-    
+
     const el = document.createElement('div');
     el.style.position = 'absolute';
     el.style.top = '0px';
@@ -280,31 +280,31 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     el.style.padding = '12px';
     el.style.fontFamily = 'Geist';
     document.body.appendChild(el);
-    
+
     try {
       katex.render(mathValue, el, { throwOnError: false });
       await new Promise(r => setTimeout(r, 150)); // Increased timeout to ensure KaTeX renders fully
-      
+
       let dataUrl = '';
       try {
-        dataUrl = await htmlToImage.toPng(el, { 
-          backgroundColor: 'transparent', 
+        dataUrl = await htmlToImage.toPng(el, {
+          backgroundColor: 'transparent',
           pixelRatio: 2.5,
           fontEmbedCSS: '', // Prevent fetching external fonts that may 404
         });
       } catch (imgErr) {
         console.warn("Primary image conversion failed, attempting fallback:", imgErr);
-        dataUrl = await htmlToImage.toPng(el, { 
-          backgroundColor: 'transparent', 
+        dataUrl = await htmlToImage.toPng(el, {
+          backgroundColor: 'transparent',
           pixelRatio: 2.5,
           fontEmbedCSS: '',
           filter: (node: any) => node.tagName !== 'LINK' && node.tagName !== 'STYLE'
         });
       }
-      
+
       if (!dataUrl) throw new Error("Image data URL is empty");
       const rect = el.getBoundingClientRect();
-      
+
       addAnnotation({
         id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
         type: 'math',
@@ -327,12 +327,12 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
   return (
     <div className="absolute inset-0 z-10 pointer-events-auto">
-      <Stage 
-        width={isMobile ? window.innerWidth : size.width} 
-        height={size.height} 
-        className="w-full h-full origin-top-left" 
-        style={{ 
-          touchAction: (activeTool === 'pen' || activeTool === 'highlighter') ? 'none' : 'pan-y !important' as any 
+      <Stage
+        width={isMobile ? window.innerWidth : size.width}
+        height={size.height}
+        className="w-full h-full origin-top-left"
+        style={{
+          touchAction: (activeTool === 'pen' || activeTool === 'highlighter') ? 'none' : 'pan-y !important' as any
         }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -427,9 +427,9 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
               );
             } else if (anno.type === 'math') {
               return (
-                <MathNode 
+                <MathNode
                   key={anno.id}
-                  annotation={{...anno, ...shadowProps, draggable: activeTool === 'select'}} 
+                  annotation={{ ...anno, ...shadowProps, draggable: activeTool === 'select' }}
                   size={size}
                   scaleFactor={scaleFactor}
                   listening={canInteractWithAnnotations}
@@ -456,7 +456,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
             }
             return null;
           })}
-          
+
           <Path
             ref={drawingPathRef}
             data=""
@@ -468,7 +468,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
       {/* Overlays */}
       {textInput && (
-        <div 
+        <div
           className="absolute z-50 pointer-events-auto"
           style={{ top: textInput.y, left: textInput.x, transform: 'translate(-8px, -8px)' }}
         >
@@ -495,7 +495,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
       )}
 
       {mathInput && (
-        <div 
+        <div
           className="absolute bg-white/80 backdrop-blur-3xl p-5 rounded-[24px] shadow-[0_32px_80px_rgba(0,0,0,0.15)] border border-white/50 flex flex-col gap-4 z-50 pointer-events-auto"
           style={{ top: mathInput.y + 10, left: mathInput.x }}
         >
@@ -513,13 +513,13 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
             />
           </div>
           <div className="flex justify-end gap-3">
-            <button 
+            <button
               className="text-xs font-bold px-4 py-2 text-slate-500 hover:text-slate-800 transition-colors"
               onClick={() => setMathInput(null)}
             >
               Cancel
             </button>
-            <button 
+            <button
               className="text-xs font-bold px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
               onClick={handleMathSubmit}
             >

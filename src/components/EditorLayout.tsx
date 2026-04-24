@@ -12,13 +12,13 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const EditorLayout: React.FC = () => {
-  const { 
-    activeTool, setActiveTool, color, setColor, strokeWidth, setStrokeWidth, 
+  const {
+    activeTool, setActiveTool, color, setColor, strokeWidth, setStrokeWidth,
     annotations, toggleVisibility, selectedAnnotationId, setSelectedAnnotationId,
     backgroundImage, setBackgroundImage,
     undo, redo, canUndo, canRedo
   } = useEditor();
-  
+
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'properties' | 'layers'>('properties');
 
@@ -83,13 +83,13 @@ const EditorLayout: React.FC = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="bg-[#F2F2F7] font-sans text-slate-900 antialiased overflow-hidden h-screen flex flex-col"
     >
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
-      
+
       {/* Dynamic Glass Header */}
       <header className="fixed top-0 left-0 right-0 z-[100] bg-white/70 backdrop-blur-2xl border-b border-slate-200/50 flex justify-between items-center w-full px-4 sm:px-8 h-14">
         <div className="flex items-center gap-3 group cursor-pointer scale-90 sm:scale-100 origin-left">
@@ -98,7 +98,7 @@ const EditorLayout: React.FC = () => {
           </div>
           <span className="text-xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent italic">Annotate<span className="text-[#007AFF] not-italic">Pro</span></span>
         </div>
-        
+
         <div className="flex items-center gap-2 flex-shrink-0">
           <div className="flex items-center gap-1 mr-1 sm:mr-2">
             <motion.button
@@ -124,8 +124,8 @@ const EditorLayout: React.FC = () => {
               <RotateCw size={18} strokeWidth={2.5} />
             </motion.button>
           </div>
-          
-          <motion.button 
+
+          <motion.button
             whileTap={{ scale: 0.94 }}
             onClick={() => fileInputRef.current?.click()}
             className="p-2 sm:px-4 sm:py-2 rounded-2xl text-slate-600 hover:bg-black/5 transition-colors text-xs font-bold flex items-center gap-2"
@@ -133,10 +133,10 @@ const EditorLayout: React.FC = () => {
             <Upload size={16} strokeWidth={2.5} />
             <span className="hidden sm:inline">Upload</span>
           </motion.button>
-          
-          <motion.button 
+
+          <motion.button
             whileTap={{ scale: 0.94 }}
-            onClick={handleExport} 
+            onClick={handleExport}
             className="px-4 py-2 sm:px-5 rounded-xl bg-[#007AFF] text-white hover:bg-[#0071E3] transition-colors text-xs font-bold shadow-lg shadow-blue-500/10 flex items-center gap-2"
           >
             <Download size={16} strokeWidth={2.5} />
@@ -146,86 +146,86 @@ const EditorLayout: React.FC = () => {
       </header>
 
       {/* Global Scroll Container - Native Touch Support */}
-      <main 
-        className="flex-1 min-h-screen mt-14 canvas-bg flex flex-col items-center py-20 lg:py-12 select-none" 
-        style={{ 
+      <main
+        className="flex-1 min-h-screen mt-14 canvas-bg flex flex-col items-center py-20 lg:py-12 select-none"
+        style={{
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
           height: '100%'
         }}
       >
         {/* Document Wrapper - Balanced Alignment */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          ref={documentContainerRef} 
+          ref={documentContainerRef}
           className={cn(
             "w-full px-4 lg:px-0 lg:max-w-[816px] flex-shrink-0 mb-40 lg:mb-16 mx-auto select-none",
             isInspectorOpen && isMobile && "pointer-events-none opacity-50 transition-opacity"
           )}
         >
-          <div 
+          <div
             className={cn(
               "w-full bg-white rounded-[32px] lg:rounded-[24px] overflow-hidden relative transition-all duration-500",
               "shadow-[0_20px_50px_rgba(0,0,0,0.1)] lg:shadow-[0_8px_30px_rgba(0,0,0,0.04)]",
               !backgroundImage && "aspect-[1/1.7] sm:aspect-[1/1.414]"
             )}
-            style={{ 
-              display: 'flex', 
+            style={{
+              display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center', 
+              alignItems: 'center',
               justifyContent: 'center',
               overflowY: 'auto'
             }}
           >
-          {backgroundImage ? (
-            <img src={backgroundImage} alt="Background" className="w-full max-w-full h-auto object-contain mx-auto block pointer-events-none" />
-          ) : (
-            <div className="document-content p-6 sm:p-16 w-full h-full bg-white">
-              <div className="border-b-[4px] border-slate-900 pb-8 mb-12 flex justify-between items-end">
-                <div className="space-y-1">
-                  <h1 className="text-4xl sm:text-6xl font-black text-slate-950 tracking-tighter leading-none italic uppercase">RESIDENTIAL FLOOR PLAN</h1>
-                  <p className="text-xs sm:text-sm text-[#007AFF] font-black tracking-[0.4em] uppercase opacity-90">Architectural Series • v4.0</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 mb-16">
-                <div className="space-y-6">
-                  <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Project Metadata</h3>
-                  <p className="text-base sm:text-lg text-slate-800 leading-relaxed font-semibold">
-                    Detailed schematics for the North Wing expansion, focusing on open-concept flow and structural load-bearing optimization.
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="bg-[#F2F2F7]/50 backdrop-blur-md p-6 rounded-[32px] border border-white/50 shadow-sm">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Scale</p>
-                    <p className="text-2xl font-black text-slate-900">1:50</p>
-                  </div>
-                  <div className="bg-[#F2F2F7]/50 backdrop-blur-md p-6 rounded-[32px] border border-white/50 shadow-sm">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Sheet</p>
-                    <p className="text-2xl font-black text-[#007AFF]">A-102</p>
+            {backgroundImage ? (
+              <img src={backgroundImage} alt="Background" className="w-full max-w-full h-auto object-contain mx-auto block pointer-events-none" />
+            ) : (
+              <div className="document-content p-6 sm:p-16 w-full h-full bg-white">
+                <div className="border-b-[4px] border-slate-900 pb-8 mb-12 flex justify-between items-end">
+                  <div className="space-y-1">
+                    <h1 className="text-4xl sm:text-6xl font-black text-slate-950 tracking-tighter leading-none italic uppercase">RESIDENTIAL FLOOR PLAN</h1>
+                    <p className="text-xs sm:text-sm text-[#007AFF] font-black tracking-[0.4em] uppercase opacity-90">Architectural Series • v4.0</p>
                   </div>
                 </div>
-              </div>
 
-              <div className="relative rounded-[48px] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.12)] border-8 border-white mb-16 bg-white group">
-                 <img 
-                   src="https://images.unsplash.com/photo-1574362848149-11496d93a7c7?q=80&w=1972&auto=format&fit=crop" 
-                   alt="Architectural Floor Plan" 
-                   className="w-full max-w-full h-auto object-contain mx-auto opacity-90 transition-transform duration-1000 group-hover:scale-105"
-                 />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 mb-16">
+                  <div className="space-y-6">
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Project Metadata</h3>
+                    <p className="text-base sm:text-lg text-slate-800 leading-relaxed font-semibold">
+                      Detailed schematics for the North Wing expansion, focusing on open-concept flow and structural load-bearing optimization.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="bg-[#F2F2F7]/50 backdrop-blur-md p-6 rounded-[32px] border border-white/50 shadow-sm">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Scale</p>
+                      <p className="text-2xl font-black text-slate-900">1:50</p>
+                    </div>
+                    <div className="bg-[#F2F2F7]/50 backdrop-blur-md p-6 rounded-[32px] border border-white/50 shadow-sm">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Sheet</p>
+                      <p className="text-2xl font-black text-[#007AFF]">A-102</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative rounded-[48px] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.12)] border-8 border-white mb-16 bg-white group">
+                  <img
+                    src="https://images.unsplash.com/photo-1574362848149-11496d93a7c7?q=80&w=1972&auto=format&fit=crop"
+                    alt="Architectural Floor Plan"
+                    className="w-full max-w-full h-auto object-contain mx-auto opacity-90 transition-transform duration-1000 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
+                </div>
               </div>
-            </div>
-          )}
-          <CanvasLayer containerRef={documentContainerRef} />
+            )}
+            <CanvasLayer containerRef={documentContainerRef} />
           </div>
         </motion.div>
       </main>
 
       {/* Universal Premium Dock */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9998] w-fit max-w-[95%] pointer-events-none">
-        <motion.nav 
+        <motion.nav
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.4 }}
@@ -244,17 +244,17 @@ const EditorLayout: React.FC = () => {
             >
               <t.icon size={isMobile ? 18 : 22} strokeWidth={2.5} className="relative z-10" />
               {activeTool === t.id && (
-                <motion.div 
-                  layoutId="apple-bubble-final" 
+                <motion.div
+                  layoutId="apple-bubble-final"
                   className="absolute -inset-2.5 sm:-inset-3 bg-[#007AFF] rounded-full shadow-[0_8px_25px_rgba(0,122,255,0.5)]"
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 />
               )}
             </motion.button>
           ))}
-          
+
           <div className="w-[1px] h-8 bg-slate-200/50 flex-shrink-0 mx-1 lg:hidden" />
-          
+
           <motion.button
             whileHover={{ y: -4 }}
             whileTap={{ scale: 0.85 }}
@@ -274,7 +274,7 @@ const EditorLayout: React.FC = () => {
         {isInspectorOpen || !isMobile ? (
           <>
             {isMobile && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -283,7 +283,7 @@ const EditorLayout: React.FC = () => {
               />
             )}
 
-            <motion.aside 
+            <motion.aside
               initial={isMobile ? { y: "100%" } : { x: "100%" }}
               animate={isMobile ? { y: 0 } : { x: 0 }}
               exit={isMobile ? { y: "100%" } : { x: "100%" }}
@@ -309,8 +309,8 @@ const EditorLayout: React.FC = () => {
               {/* Tabs */}
               <div className="flex px-8 border-b border-slate-100/50">
                 {['properties', 'layers'].map(tab => (
-                  <button 
-                    key={tab} 
+                  <button
+                    key={tab}
                     onClick={() => setActiveTab(tab as any)}
                     className={cn(
                       "pb-4 text-sm font-black uppercase tracking-[0.15em] relative mr-10",
@@ -350,8 +350,8 @@ const EditorLayout: React.FC = () => {
                         <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-950">Line Weight</p>
                         <span className="text-2xl font-black text-[#007AFF] tracking-tighter leading-none">{strokeWidth}px</span>
                       </div>
-                      <input 
-                        type="range" min="1" max="30" step="1" 
+                      <input
+                        type="range" min="1" max="30" step="1"
                         value={strokeWidth} onChange={(e) => setStrokeWidth(Number(e.target.value))}
                         className="w-full h-2 bg-slate-200 rounded-full appearance-none cursor-pointer accent-[#007AFF]"
                       />
@@ -363,8 +363,8 @@ const EditorLayout: React.FC = () => {
                       <div className="py-24 text-center opacity-30 font-black uppercase text-[10px] tracking-widest">No Active Layers</div>
                     ) : (
                       [...annotations].reverse().map(anno => (
-                        <div 
-                          key={anno.id} 
+                        <div
+                          key={anno.id}
                           onClick={() => { setActiveTool('select'); setSelectedAnnotationId(anno.id); }}
                           className={cn(
                             "flex items-center gap-4 p-4 rounded-[28px] cursor-pointer transition-all border-2 shadow-sm",
