@@ -98,6 +98,13 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
+    
+    // Initial size calculation for production stability
+    setSize({
+      width: containerRef.current.clientWidth,
+      height: containerRef.current.clientHeight,
+    });
+
     const observer = new ResizeObserver((entries) => {
       for (let entry of entries) {
         setSize({
@@ -111,6 +118,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   }, [containerRef]);
 
   const handlePointerDown = (e: KonvaEventObject<PointerEvent>) => {
+    console.log('Stage Pointer Down - Drawing State:', isDrawing.current);
     const pos = e.target.getStage()?.getPointerPosition();
     if (!pos) return;
 
