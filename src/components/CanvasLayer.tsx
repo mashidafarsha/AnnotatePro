@@ -349,10 +349,30 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
   const canInteractWithAnnotations = activeTool === 'select' || activeTool === 'eraser';
 
+  const getCursor = () => {
+    switch (activeTool) {
+      case 'pen':
+      case 'highlighter':
+        return 'crosshair';
+      case 'eraser':
+        return 'cell';
+      case 'text':
+      case 'math':
+        return 'text';
+      case 'select':
+        return 'move';
+      default:
+        return 'default';
+    }
+  };
+
   return (
     <div
       className="absolute inset-0 z-[9999] pointer-events-auto"
-      style={{ touchAction: 'none', background: 'rgba(34, 197, 94, 0.08)', border: '2px dashed #22c55e' }}
+      style={{
+        touchAction: 'none',
+        cursor: getCursor()
+      }}
     >
       <Stage
         ref={stageRef}

@@ -163,58 +163,61 @@ const EditorLayout: React.FC = () => {
           <div
             ref={innerContainerRef}
             className={cn(
-              "w-full bg-white rounded-[32px] lg:rounded-[24px] overflow-hidden relative transition-all duration-500",
-              "shadow-[0_20px_50px_rgba(0,0,0,0.1)] lg:shadow-[0_8px_30px_rgba(0,0,0,0.04)]",
-              !backgroundImage && "aspect-[1/1.7] sm:aspect-[1/1.414]"
+              "w-full bg-white rounded-[32px] lg:rounded-[12px] overflow-hidden relative transition-all duration-500",
+              "shadow-[0_20px_50px_rgba(0,0,0,0.1)] lg:shadow-[0_30px_90px_rgba(0,0,0,0.12)]",
+              "lg:border lg:border-slate-200/60 lg:max-h-[80vh] lg:h-auto",
+              "aspect-[1/1.414] min-h-[600px]"
             )}
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              overflowY: 'auto'
+              position: 'relative'
             }}
           >
-            {backgroundImage ? (
-              <img src={backgroundImage} alt="Background" className="w-full max-w-full h-auto object-contain mx-auto block pointer-events-none relative z-[1]" />
-            ) : (
-              <div className="document-content p-6 sm:p-16 w-full h-full bg-white">
-                <div className="border-b-[4px] border-slate-900 pb-8 mb-12 flex justify-between items-end">
-                  <div className="space-y-1">
-                    <h1 className="text-4xl sm:text-6xl font-black text-slate-950 tracking-tighter leading-none italic uppercase">RESIDENTIAL FLOOR PLAN</h1>
-                    <p className="text-xs sm:text-sm text-[#007AFF] font-black tracking-[0.4em] uppercase opacity-90">Architectural Series • v4.0</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 mb-16">
-                  <div className="space-y-6">
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Project Metadata</h3>
-                    <p className="text-base sm:text-lg text-slate-800 leading-relaxed font-semibold">
-                      Detailed schematics for the North Wing expansion, focusing on open-concept flow and structural load-bearing optimization.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="bg-[#F2F2F7]/50 backdrop-blur-md p-6 rounded-[32px] border border-white/50 shadow-sm">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Scale</p>
-                      <p className="text-2xl font-black text-slate-900">1:50</p>
-                    </div>
-                    <div className="bg-[#F2F2F7]/50 backdrop-blur-md p-6 rounded-[32px] border border-white/50 shadow-sm">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Sheet</p>
-                      <p className="text-2xl font-black text-[#007AFF]">A-102</p>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+              {backgroundImage ? (
+                <img src={backgroundImage} alt="Background" className="w-full h-full object-contain pointer-events-none relative z-[1] transition-opacity duration-500" />
+              ) : (
+                <div className="document-content p-6 sm:p-16 w-full h-full bg-white transition-opacity duration-500">
+                  <div className="border-b-[4px] border-slate-900 pb-8 mb-12 flex justify-between items-end">
+                    <div className="space-y-1">
+                      <h1 className="text-4xl sm:text-6xl font-black text-slate-950 tracking-tighter leading-none italic uppercase">RESIDENTIAL FLOOR PLAN</h1>
+                      <p className="text-xs sm:text-sm text-[#007AFF] font-black tracking-[0.4em] uppercase opacity-90">Architectural Series • v4.0</p>
                     </div>
                   </div>
-                </div>
 
-                <div className="relative rounded-[48px] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.12)] border-8 border-white mb-16 bg-white group">
-                  <img
-                    src="https://images.unsplash.com/photo-1574362848149-11496d93a7c7?q=80&w=1972&auto=format&fit=crop"
-                    alt="Architectural Floor Plan"
-                    className="w-full max-w-full h-auto object-contain mx-auto opacity-90 transition-transform duration-1000 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 mb-16">
+                    <div className="space-y-6">
+                      <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Project Metadata</h3>
+                      <p className="text-base sm:text-lg text-slate-800 leading-relaxed font-semibold">
+                        Detailed schematics for the North Wing expansion, focusing on open-concept flow and structural load-bearing optimization.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="bg-[#F2F2F7]/50 backdrop-blur-md p-6 rounded-[32px] border border-white/50 shadow-sm">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Scale</p>
+                        <p className="text-2xl font-black text-slate-900">1:50</p>
+                      </div>
+                      <div className="bg-[#F2F2F7]/50 backdrop-blur-md p-6 rounded-[32px] border border-white/50 shadow-sm">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Sheet</p>
+                        <p className="text-2xl font-black text-[#007AFF]">A-102</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="relative rounded-[48px] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.12)] border-8 border-white mb-16 bg-white group">
+                    <img
+                      src="https://images.unsplash.com/photo-1574362848149-11496d93a7c7?q=80&w=1972&auto=format&fit=crop"
+                      alt="Architectural Floor Plan"
+                      className="w-full max-w-full h-auto object-contain mx-auto opacity-90 transition-transform duration-1000 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
             <CanvasLayer containerRef={innerContainerRef} />
           </div>
         </motion.div>
@@ -226,7 +229,7 @@ const EditorLayout: React.FC = () => {
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.4 }}
-          className="bg-white/70 backdrop-blur-2xl rounded-full border border-white/30 px-5 sm:px-6 py-3 flex items-center gap-4 sm:gap-6 shadow-[0_24px_60px_rgba(0,0,0,0.18)] pointer-events-auto"
+          className="bg-white/20 backdrop-blur-md rounded-full border border-white/40 px-5 sm:px-6 py-3 flex items-center gap-4 sm:gap-6 shadow-[0_24px_60px_rgba(0,0,0,0.08)] pointer-events-auto transition-all duration-300 ease-in-out hover:shadow-[0_32px_80px_rgba(0,0,0,0.15)]"
         >
           {tools.map((t) => (
             <motion.button
@@ -235,7 +238,7 @@ const EditorLayout: React.FC = () => {
               whileTap={{ scale: 0.85 }}
               onClick={() => setActiveTool(t.id)}
               className={cn(
-                "p-1 rounded-full transition-all relative flex items-center justify-center flex-shrink-0",
+                "p-1 rounded-full transition-all duration-300 ease-in-out relative flex items-center justify-center flex-shrink-0",
                 activeTool === t.id ? "text-white" : "text-slate-500 hover:text-slate-900"
               )}
             >
@@ -286,9 +289,9 @@ const EditorLayout: React.FC = () => {
               exit={isMobile ? { y: "100%" } : { x: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className={cn(
-                "fixed z-[10000] bg-white/60 backdrop-blur-xl flex flex-col shadow-[0_-20px_80px_rgba(0,0,0,0.1)] transition-all overflow-hidden",
-                "bottom-0 left-0 right-0 h-[75vh] rounded-t-[40px] border-t border-white/20", // Mobile
-                "lg:top-14 lg:bottom-0 lg:right-0 lg:left-auto lg:w-[320px] lg:h-auto lg:rounded-none lg:border-l lg:border-slate-200/50 lg:shadow-none" // Desktop
+                "fixed z-[10000] bg-white/40 backdrop-blur-3xl flex flex-col shadow-[0_-20px_80px_rgba(0,0,0,0.1)] transition-all duration-500 ease-in-out overflow-hidden",
+                "bottom-0 left-0 right-0 h-[75vh] rounded-t-[40px] border-t border-white/40", // Mobile
+                "lg:top-14 lg:bottom-0 lg:right-0 lg:left-auto lg:w-[320px] lg:h-auto lg:rounded-none lg:border-l lg:border-white/40 lg:shadow-none" // Desktop
               )}
             >
               {/* iOS Grabber */}
