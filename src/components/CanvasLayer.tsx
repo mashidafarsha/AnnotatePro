@@ -31,10 +31,10 @@ export function getSvgPathFromStroke(stroke: number[][]) {
   return d.join(' ');
 }
 
-const MathNode = ({ 
-  annotation, size, responsiveScale, onPointerDown, onMouseEnter, onMouseLeave, onDragStart, onDragEnd, listening 
-}: { 
-  annotation: any; size: {width: number, height: number}; responsiveScale: number;
+const MathNode = ({
+  annotation, size, responsiveScale, onPointerDown, onMouseEnter, onMouseLeave, onDragStart, onDragEnd, listening
+}: {
+  annotation: any; size: { width: number, height: number }; responsiveScale: number;
   onPointerDown: any; onMouseEnter: any; onMouseLeave: any; onDragStart?: any; onDragEnd?: any; listening?: boolean;
 }) => {
   const [img] = useImage(annotation.imageSrc);
@@ -78,7 +78,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     activeTool, color, strokeWidth, annotations, addAnnotation, updateAnnotation, removeAnnotation,
     selectedAnnotationId, setSelectedAnnotationId
   } = useEditor();
-  
+
   const [size, setSize] = useState({ width: 0, height: 0 });
   const isDrawing = useRef(false);
   const currentPoints = useRef<Point[]>([]);
@@ -200,7 +200,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     } else if (activeTool === 'select') {
       e.cancelBubble = true;
       setSelectedAnnotationId(id);
-      
+
       const node = e.target;
       node.to({
         scaleX: 1.08,
@@ -261,7 +261,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     try {
       katex.render(mathValue, el, { throwOnError: false });
       await new Promise(r => setTimeout(r, 150));
-      
+
       const dataUrl = await htmlToImage.toPng(el, {
         backgroundColor: 'transparent',
         pixelRatio: 2.5,
@@ -370,7 +370,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
               );
             } else if (anno.type === 'math') {
               return (
-                <MathNode 
+                <MathNode
                   key={anno.id}
                   annotation={{ ...anno, ...shadowProps, draggable: activeTool === 'select' }}
                   size={size}
@@ -398,11 +398,11 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
       {/* Input Overlays */}
       {textInput && (
-        <div 
+        <div
           className={cn(
             "z-[100] pointer-events-auto",
-            window.innerWidth < 768 
-              ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] bg-white/90 backdrop-blur-2xl p-6 rounded-[32px] shadow-[0_40px_100px_rgba(0,0,0,0.2)] border border-white/40" 
+            window.innerWidth < 768
+              ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] bg-white/90 backdrop-blur-2xl p-6 rounded-[32px] shadow-[0_40px_100px_rgba(0,0,0,0.2)] border border-white/40"
               : "absolute bg-white/80 backdrop-blur-xl p-3 rounded-2xl shadow-xl border border-white/50"
           )}
           style={window.innerWidth < 768 ? {} : { top: textInput.y, left: textInput.x, transform: 'translate(-12px, -12px)' }}
@@ -424,7 +424,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
       )}
 
       {mathInput && (
-        <div 
+        <div
           className={cn(
             "bg-white/90 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_100px_rgba(0,0,0,0.18)] border border-white/50 flex flex-col gap-4 z-[100] pointer-events-auto",
             window.innerWidth < 768 ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] p-6 scale-90" : "absolute p-6"
@@ -443,14 +443,14 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
             />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button 
-              className="text-xs font-black uppercase tracking-widest px-5 py-3 text-slate-400 hover:text-slate-600 transition-colors" 
+            <button
+              className="text-xs font-black uppercase tracking-widest px-5 py-3 text-slate-400 hover:text-slate-600 transition-colors"
               onClick={() => setMathInput(null)}
             >
               Cancel
             </button>
-            <button 
-              className="text-xs font-black uppercase tracking-widest px-6 py-3 bg-[#1e293b] text-white rounded-2xl hover:bg-slate-800 shadow-xl shadow-slate-200 transition-all active:scale-95" 
+            <button
+              className="text-xs font-black uppercase tracking-widest px-6 py-3 bg-[#1e293b] text-white rounded-2xl hover:bg-slate-800 shadow-xl shadow-slate-200 transition-all active:scale-95"
               onClick={handleMathSubmit}
             >
               Apply
