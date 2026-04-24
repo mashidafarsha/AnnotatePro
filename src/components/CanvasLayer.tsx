@@ -1,4 +1,4 @@
-import React, { useRef, useLayoutEffect, useState, useEffect } from 'react';
+import React, { useRef, useLayoutEffect, useState } from 'react';
 import { Stage, Layer, Path, Text, Image as KonvaImage } from 'react-konva';
 import { useEditor, type Point } from '../store/EditorContext';
 import { getStroke } from 'perfect-freehand';
@@ -95,19 +95,11 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     return window.innerWidth < 768 ? 0.7 : 1;
   }, [size.width]);
 
-  // Production Debug Log
-  useEffect(() => {
-    console.log('CanvasLayer production engine initialized');
-  }, []);
-
   useLayoutEffect(() => {
     if (!containerRef.current) return;
     const updateSize = () => {
-      const rect = containerRef.current!.getBoundingClientRect();
-      setSize({
-        width: rect.width,
-        height: rect.height,
-      });
+      const { clientWidth, clientHeight } = containerRef.current!;
+      setSize({ width: clientWidth, height: clientHeight });
     };
 
     updateSize();
@@ -124,20 +116,15 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   const getRelativePointerPosition = () => {
     const stage = stageRef.current;
     if (!stage) return null;
-
-    // Absolute pointer position from Konva
-    const pointer = stage.getPointerPosition();
-    if (!pointer) return null;
-    // Safety check: ensure coordinates are relative to the Stage container
-    return {
-      x: pointer.x,
-      y: pointer.y
-    };
+    return stage.getPointerPosition();
   };
 
-  const handlePointerDown = () => {
+  const handlePointerDown = (e: KonvaEventObject<PointerEvent>) => {
     const pos = getRelativePointerPosition();
     if (!pos) return;
+
+    e.evt.preventDefault();
+    console.log('Production Stage Clicked:', pos);
 
     if (activeTool === 'pen' || activeTool === 'highlighter') {
       isDrawing.current = true;
@@ -153,13 +140,11 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     if (!pos) return;
 
     currentPoints.current.push([pos.x, pos.y]);
-    console.log('Drawing stroke:', currentPoints.current);
     updateDrawingPath();
   };
 
   const handlePointerUp = () => {
     if (!isDrawing.current) return;
-    console.log('Stroke completed:', currentPoints.current);
     isDrawing.current = false;
 
     if (currentPoints.current.length > 0 && size.width > 0 && size.height > 0) {
@@ -229,29 +214,15 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     } else if (activeTool === 'select') {
       e.cancelBubble = true;
       setSelectedAnnotationId(id);
-
-      const node = e.target;
-      node.to({
-        scaleX: 1.08,
-        scaleY: 1.08,
-        duration: 0.1,
-        onFinish: () => { node.to({ scaleX: 1, scaleY: 1, duration: 0.15 }); }
-      });
     }
   };
 
   const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
     e.target.moveToTop();
-    e.target.to({ shadowBlur: 15, shadowOpacity: 0.3, duration: 0.2 });
   };
 
   const handleDragEnd = (e: KonvaEventObject<DragEvent>, id: string) => {
     const node = e.target;
-    node.to({
-      shadowBlur: selectedAnnotationId === id ? 8 : 0,
-      shadowOpacity: selectedAnnotationId === id ? 0.8 : 0,
-      duration: 0.2
-    });
     updateAnnotation(id, {
       x: node.x() / size.width,
       y: node.y() / size.height,
@@ -321,15 +292,11 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   const canInteractWithAnnotations = activeTool === 'select' || activeTool === 'eraser';
 
   return (
-    <div
-      className="absolute inset-0 lg:bottom-32 z-[9999] pointer-events-auto"
-      style={{ touchAction: 'none', width: '100%', height: '100%' }}
-    >
+    <div className="absolute inset-0 z-10 pointer-events-auto" style={{ touchAction: 'none' }}>
       <Stage
         ref={stageRef}
         width={size.width}
         height={size.height}
-        className="w-full h-full origin-top-left"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -363,11 +330,6 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
                     if (activeTool === 'eraser') { e.cancelBubble = true; removeAnnotation(anno.id); }
                     else if (activeTool === 'select') { e.cancelBubble = true; setSelectedAnnotationId(anno.id); }
                   }}
-                  onMouseEnter={() => {
-                    if (activeTool === 'eraser') document.body.style.cursor = 'crosshair';
-                    else if (activeTool === 'select') document.body.style.cursor = 'pointer';
-                  }}
-                  onMouseLeave={() => { document.body.style.cursor = 'default'; }}
                 />
               );
             } else if (anno.type === 'text') {
@@ -393,11 +355,6 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
                     if (activeTool === 'eraser') { e.cancelBubble = true; removeAnnotation(anno.id); }
                     else if (activeTool === 'select') { e.cancelBubble = true; setSelectedAnnotationId(anno.id); }
                   }}
-                  onMouseEnter={() => {
-                    if (activeTool === 'eraser') document.body.style.cursor = 'crosshair';
-                    else if (activeTool === 'select') document.body.style.cursor = 'pointer';
-                  }}
-                  onMouseLeave={() => { document.body.style.cursor = 'default'; }}
                 />
               );
             } else if (anno.type === 'math') {
@@ -414,11 +371,8 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
                     if (activeTool === 'eraser') { e.cancelBubble = true; removeAnnotation(anno.id); }
                     else if (activeTool === 'select') { e.cancelBubble = true; setSelectedAnnotationId(anno.id); }
                   }}
-                  onMouseEnter={() => {
-                    if (activeTool === 'eraser') document.body.style.cursor = 'crosshair';
-                    else if (activeTool === 'select') document.body.style.cursor = 'pointer';
-                  }}
-                  onMouseLeave={() => { document.body.style.cursor = 'default'; }}
+                  onMouseEnter={() => { }}
+                  onMouseLeave={() => { }}
                 />
               );
             }
@@ -428,65 +382,48 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
         </Layer>
       </Stage>
 
-      {/* Input Overlays */}
       {textInput && (
         <div
           className={cn(
             "z-[1000] pointer-events-auto",
             window.innerWidth < 768
-              ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] bg-white/90 backdrop-blur-2xl p-6 rounded-[32px] shadow-[0_40px_100px_rgba(0,0,0,0.2)] border border-white/40"
+              ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] bg-white/90 backdrop-blur-2xl p-6 rounded-[32px] shadow-xl border border-white/40"
               : "absolute bg-white/80 backdrop-blur-xl p-3 rounded-2xl shadow-xl border border-white/50"
           )}
           style={window.innerWidth < 768 ? {} : { top: textInput.y, left: textInput.x, transform: 'translate(-12px, -12px)' }}
         >
-          <div className="flex flex-col gap-1.5">
-            {window.innerWidth < 768 && <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Add Annotation</label>}
-            <input
-              autoFocus
-              className="bg-transparent border-none outline-none font-bold text-[#1e293b] placeholder:text-slate-300 w-full"
-              style={{ fontSize: window.innerWidth < 768 ? 14 : (strokeWidth * 3 + 12), fontFamily: 'Geist' }}
-              placeholder="Type..."
-              value={textValue}
-              onChange={(e) => setTextValue(e.target.value)}
-              onBlur={handleTextSubmit}
-              onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
-            />
-          </div>
+          <input
+            autoFocus
+            className="bg-transparent border-none outline-none font-bold text-[#1e293b] placeholder:text-slate-300 w-full"
+            style={{ fontSize: window.innerWidth < 768 ? 14 : (strokeWidth * 3 + 12), fontFamily: 'Geist' }}
+            placeholder="Type..."
+            value={textValue}
+            onChange={(e) => setTextValue(e.target.value)}
+            onBlur={handleTextSubmit}
+            onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
+          />
         </div>
       )}
 
       {mathInput && (
         <div
           className={cn(
-            "bg-white/90 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_100px_rgba(0,0,0,0.18)] border border-white/50 flex flex-col gap-4 z-[1000] pointer-events-auto",
-            window.innerWidth < 768 ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] p-6 scale-90" : "absolute p-6"
+            "bg-white/90 backdrop-blur-3xl rounded-[32px] shadow-xl border border-white/50 flex flex-col gap-4 z-[1000] pointer-events-auto",
+            window.innerWidth < 768 ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] p-6" : "absolute p-6"
           )}
           style={window.innerWidth < 768 ? {} : { top: mathInput.y + 10, left: mathInput.x, transform: 'translateX(-50%)' }}
         >
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[#007AFF] opacity-80">Equation Input</label>
-            <input
-              autoFocus
-              className="w-full bg-slate-100/40 border border-slate-200/50 outline-none px-5 py-4 rounded-2xl font-mono text-sm text-[#1e293b] placeholder:text-slate-300"
-              placeholder="e.g. E = mc^2"
-              value={mathValue}
-              onChange={(e) => setMathValue(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleMathSubmit()}
-            />
-          </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              className="text-xs font-black uppercase tracking-widest px-5 py-3 text-slate-400 hover:text-slate-600 transition-colors"
-              onClick={() => setMathInput(null)}
-            >
-              Cancel
-            </button>
-            <button
-              className="text-xs font-black uppercase tracking-widest px-6 py-3 bg-[#1e293b] text-white rounded-2xl hover:bg-slate-800 shadow-xl shadow-slate-200 transition-all active:scale-95"
-              onClick={handleMathSubmit}
-            >
-              Apply
-            </button>
+          <input
+            autoFocus
+            className="w-full bg-slate-100/40 border border-slate-200/50 outline-none px-5 py-4 rounded-2xl font-mono text-sm"
+            placeholder="e.g. E = mc^2"
+            value={mathValue}
+            onChange={(e) => setMathValue(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleMathSubmit()}
+          />
+          <div className="flex justify-end gap-3">
+            <button className="text-xs font-black uppercase tracking-widest px-4 py-2" onClick={() => setMathInput(null)}>Cancel</button>
+            <button className="text-xs font-black uppercase tracking-widest px-6 py-2 bg-[#1e293b] text-white rounded-xl" onClick={handleMathSubmit}>Apply</button>
           </div>
         </div>
       )}
