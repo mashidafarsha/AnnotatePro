@@ -112,12 +112,30 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     return () => window.removeEventListener('mousedown', handleGlobalClick);
   }, []);
 
+  // Aggressive size polling for hosted environments
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        if (rect.width !== size.width || rect.height !== size.height) {
+          console.log('Polling Size Correction:', rect.width, rect.height);
+          setSize({ width: rect.width, height: rect.height });
+        }
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [size, containerRef]);
+
   useLayoutEffect(() => {
     if (!containerRef.current) return;
     const updateSize = () => {
-      const { clientWidth, clientHeight } = containerRef.current!;
-      console.log('Stage Resize Triggered:', { clientWidth, clientHeight });
-      setSize({ width: clientWidth, height: clientHeight });
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      console.log('Stage Resize Triggered (Rect):', rect.width, rect.height);
+      if (rect.width > 0 && rect.height > 0) {
+        // window.alert(`Stage Size Found: ${rect.width}x${rect.height}`);
+      }
+      setSize({ width: rect.width, height: rect.height });
     };
 
     updateSize();
