@@ -1,5 +1,7 @@
 # AnnotatePro: Advanced Markup & Document Annotation Engine
 **Author:** Mashida Farsha
+**Live Demo:** [annotatepro.netlify.app](https://annotatepro.netlify.app/)
+**GitHub:** [github.com/mashidafarsha/AnnotatePro](https://github.com/mashidafarsha/AnnotatePro)
 
 AnnotatePro is a high-performance, mobile-first document annotation engine built with React, Framer Motion, and Konva.js. Designed with a premium "Apple-style" SaaS aesthetic, it provides robust drawing tools, advanced layer management, and a seamless responsive experience across both desktop and mobile devices.
 
@@ -58,7 +60,7 @@ Follow these standard steps to clone, install, and run the project locally:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/annotate-pro.git
+   git clone https://github.com/mashidafarsha/AnnotatePro.git
    cd annotate-pro
    ```
 

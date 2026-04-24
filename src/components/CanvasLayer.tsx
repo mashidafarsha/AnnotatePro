@@ -1,77 +1,18 @@
 import React, { useRef, useLayoutEffect, useState, useEffect } from 'react';
-import { Stage, Layer, Path, Text, Image as KonvaImage } from 'react-konva';
+import { Stage, Layer, Path, Text } from 'react-konva';
 import { useEditor, type Point } from '../store/EditorContext';
 import { getStroke } from 'perfect-freehand';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import katex from 'katex';
 import * as htmlToImage from 'html-to-image';
-import useImage from 'use-image';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { getSvgPathFromStroke } from '../utils/canvasUtils';
+import { MathNode } from './editor/Canvas/MathNode';
+import { TextInput } from './editor/Canvas/TextInput';
+import { MathInput } from './editor/Canvas/MathInput';
 
 interface CanvasLayerProps {
   containerRef: React.RefObject<HTMLDivElement>;
 }
-
-export function getSvgPathFromStroke(stroke: number[][]) {
-  if (!stroke.length) return '';
-  const d = stroke.reduce(
-    (acc, [x0, y0], i, arr) => {
-      const [x1, y1] = arr[(i + 1) % arr.length];
-      acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
-      return acc;
-    },
-    ['M', ...stroke[0], 'Q']
-  );
-  d.push('Z');
-  return d.join(' ');
-}
-
-const MathNode = ({
-  annotation, size, responsiveScale, onPointerDown, onMouseEnter, onMouseLeave, onDragStart, onDragEnd, listening
-}: {
-  annotation: any; size: { width: number, height: number }; responsiveScale: number;
-  onPointerDown: any; onMouseEnter: any; onMouseLeave: any; onDragStart?: any; onDragEnd?: any; listening?: boolean;
-}) => {
-  const [img] = useImage(annotation.imageSrc);
-  const nodeRef = useRef<any>(null);
-
-  return (
-    <KonvaImage
-      ref={nodeRef}
-      image={img}
-      x={annotation.x * size.width}
-      y={annotation.y * size.height}
-      width={annotation.width}
-      height={annotation.height}
-      scaleX={responsiveScale}
-      scaleY={responsiveScale}
-      visible={annotation.visible !== false}
-      listening={listening}
-      draggable={annotation.draggable}
-      shadowColor={annotation.shadowProps?.shadowColor || '#2563eb'}
-      shadowBlur={annotation.shadowProps?.shadowBlur || 0}
-      shadowOpacity={annotation.shadowProps?.shadowOpacity || 0}
-      shadowOffsetX={0}
-      shadowOffsetY={4}
-      onPointerDown={onPointerDown}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      onDragStart={(e) => {
-        nodeRef.current?.to({ scaleX: responsiveScale * 1.05, scaleY: responsiveScale * 1.05, duration: 0.2 });
-        onDragStart?.(e);
-      }}
-      onDragEnd={(e) => {
-        nodeRef.current?.to({ scaleX: responsiveScale, scaleY: responsiveScale, duration: 0.2 });
-        onDragEnd?.(e);
-      }}
-    />
-  );
-};
 
 export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   const {
@@ -90,51 +31,22 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   const [textValue, setTextValue] = useState('');
   const [mathInput, setMathInput] = useState<{ x: number, y: number } | null>(null);
   const [mathValue, setMathValue] = useState('');
-  const textInputRef = useRef<HTMLInputElement>(null);
-  const mathInputRef = useRef<HTMLInputElement>(null);
 
   const responsiveScale = React.useMemo(() => {
     return window.innerWidth < 768 ? 0.7 : 1;
   }, [size.width]);
 
-  // Production Debug Logs
   useEffect(() => {
-    console.log('CanvasLayer Engine Initialized. Active Tool:', activeTool);
     if (activeTool !== 'text') setTextInput(null);
     if (activeTool !== 'math') setMathInput(null);
   }, [activeTool]);
 
-  useEffect(() => {
-    if (textInput && textInputRef.current) {
-      textInputRef.current.focus();
-    }
-  }, [textInput]);
-
-  useEffect(() => {
-    if (mathInput && mathInputRef.current) {
-      mathInputRef.current.focus();
-    }
-  }, [mathInput]);
-
-  useEffect(() => {
-    console.log('Current Annotations Status:', annotations.length, 'entries');
-  }, [annotations]);
-
-  useEffect(() => {
-    const handleGlobalClick = (e: MouseEvent) => {
-      console.log('Global MouseDown at:', e.clientX, e.clientY, 'Target:', e.target);
-    };
-    window.addEventListener('mousedown', handleGlobalClick);
-    return () => window.removeEventListener('mousedown', handleGlobalClick);
-  }, []);
-
-  // Aggressive size polling for hosted environments
+  // Size Correction Polling
   useEffect(() => {
     const timer = setInterval(() => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         if (rect.width !== size.width || rect.height !== size.height) {
-          console.log('Polling Size Correction:', rect.width, rect.height);
           setSize({ width: rect.width, height: rect.height });
         }
       }
@@ -147,10 +59,6 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     const updateSize = () => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      console.log('Stage Resize Triggered (Rect):', rect.width, rect.height);
-      if (rect.width > 0 && rect.height > 0) {
-        // window.alert(`Stage Size Found: ${rect.width}x${rect.height}`);
-      }
       setSize({ width: rect.width, height: rect.height });
     };
 
@@ -165,6 +73,23 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     };
   }, [containerRef]);
 
+  const getCursor = () => {
+    switch (activeTool) {
+      case 'pen':
+      case 'highlighter':
+        return 'crosshair';
+      case 'eraser':
+        return 'cell';
+      case 'text':
+      case 'math':
+        return 'text';
+      case 'select':
+        return 'move';
+      default:
+        return 'default';
+    }
+  };
+
   const getRelativePointerPosition = () => {
     const stage = stageRef.current;
     if (!stage) return null;
@@ -175,13 +100,8 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     const pos = getRelativePointerPosition();
     if (!pos) return;
 
-    // Only prevent default if we are in a drawing tool to allow click events to bubble/fire for others
     if (activeTool === 'pen' || activeTool === 'highlighter') {
       e.evt.preventDefault();
-    }
-    console.log('Production Stage Clicked:', pos);
-
-    if (activeTool === 'pen' || activeTool === 'highlighter') {
       isDrawing.current = true;
       currentPoints.current = [[pos.x, pos.y]];
       updateDrawingPath();
@@ -190,11 +110,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
   const handlePointerMove = (e: KonvaEventObject<PointerEvent>) => {
     if (!isDrawing.current) return;
-
-    // Only prevent default when actively drawing to avoid blocking browser interactions
-    if (e.evt.cancelable) {
-      e.evt.preventDefault();
-    }
+    if (e.evt.cancelable) e.evt.preventDefault();
 
     const pos = getRelativePointerPosition();
     if (!pos) return;
@@ -204,7 +120,6 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   };
 
   const handlePointerUp = () => {
-    console.log('Pointer Up. isDrawing:', isDrawing.current);
     if (!isDrawing.current) return;
     isDrawing.current = false;
 
@@ -232,10 +147,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   const updateDrawingPath = () => {
     if (!drawingPathRef.current || !layerRef.current) return;
     const strokeOutline = getStroke(currentPoints.current, {
-      size: strokeWidth * 2,
-      thinning: 0.5,
-      smoothing: 0.5,
-      streamline: 0.5,
+      size: strokeWidth * 2, thinning: 0.5, smoothing: 0.5, streamline: 0.5,
     });
 
     const pathData = getSvgPathFromStroke(strokeOutline);
@@ -247,7 +159,6 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
   const handleStageClick = () => {
     const pos = getRelativePointerPosition();
-    console.log('Stage Click/Tap Detected at:', pos, 'Tool:', activeTool);
     if (!pos) return;
 
     if (activeTool === 'select') {
@@ -273,10 +184,6 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
       e.cancelBubble = true;
       setSelectedAnnotationId(id);
     }
-  };
-
-  const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
-    e.target.moveToTop();
   };
 
   const handleDragEnd = (e: KonvaEventObject<DragEvent>, id: string) => {
@@ -319,25 +226,15 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     try {
       katex.render(mathValue, el, { throwOnError: false });
       await new Promise(r => setTimeout(r, 150));
-
-      const dataUrl = await htmlToImage.toPng(el, {
-        backgroundColor: 'transparent',
-        pixelRatio: 2.5,
-        fontEmbedCSS: '',
-      });
-
+      const dataUrl = await htmlToImage.toPng(el, { backgroundColor: 'transparent', pixelRatio: 2.5 });
       if (!dataUrl) throw new Error("Image data URL is empty");
       const rect = el.getBoundingClientRect();
 
       addAnnotation({
         id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
-        type: 'math',
-        latex: mathValue,
-        imageSrc: dataUrl,
-        x: mathInput.x / size.width,
-        y: mathInput.y / size.height,
-        width: rect.width,
-        height: rect.height,
+        type: 'math', latex: mathValue, imageSrc: dataUrl,
+        x: mathInput.x / size.width, y: mathInput.y / size.height,
+        width: rect.width, height: rect.height,
       });
     } catch (err) {
       console.error("Math rendering failed:", err);
@@ -349,40 +246,15 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
   const canInteractWithAnnotations = activeTool === 'select' || activeTool === 'eraser';
 
-  const getCursor = () => {
-    switch (activeTool) {
-      case 'pen':
-      case 'highlighter':
-        return 'crosshair';
-      case 'eraser':
-        return 'cell';
-      case 'text':
-      case 'math':
-        return 'text';
-      case 'select':
-        return 'move';
-      default:
-        return 'default';
-    }
-  };
-
   return (
     <div
       className="absolute inset-0 z-[9999] pointer-events-auto"
-      style={{
-        touchAction: 'none',
-        cursor: getCursor()
-      }}
+      style={{ touchAction: 'none', cursor: getCursor() }}
     >
       <Stage
-        ref={stageRef}
-        width={size.width}
-        height={size.height}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onClick={handleStageClick}
-        onTap={handleStageClick}
+        ref={stageRef} width={size.width} height={size.height}
+        onPointerDown={handlePointerDown} onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp} onClick={handleStageClick} onTap={handleStageClick}
       >
         <Layer ref={layerRef}>
           {annotations.map((anno) => {
@@ -398,15 +270,10 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
 
               return (
                 <Path
-                  key={anno.id}
-                  {...shadowProps}
-                  visible={isVisible}
-                  listening={canInteractWithAnnotations}
-                  data={getSvgPathFromStroke(strokeOutline)}
-                  fill={anno.color}
-                  opacity={anno.tool === 'highlighter' ? 0.35 : 1}
-                  onClick={(e) => handleAnnotationClick(e, anno.id)}
-                  onTap={(e) => handleAnnotationClick(e, anno.id)}
+                  key={anno.id} {...shadowProps} visible={isVisible}
+                  listening={canInteractWithAnnotations} data={getSvgPathFromStroke(strokeOutline)}
+                  fill={anno.color} opacity={anno.tool === 'highlighter' ? 0.35 : 1}
+                  onClick={(e) => handleAnnotationClick(e, anno.id)} onTap={(e) => handleAnnotationClick(e, anno.id)}
                   onPointerDown={(e) => {
                     if (activeTool === 'eraser') { e.cancelBubble = true; removeAnnotation(anno.id); }
                     else if (activeTool === 'select') { e.cancelBubble = true; setSelectedAnnotationId(anno.id); }
@@ -416,22 +283,12 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
             } else if (anno.type === 'text') {
               return (
                 <Text
-                  key={anno.id}
-                  {...shadowProps}
-                  visible={isVisible}
-                  listening={canInteractWithAnnotations}
-                  x={anno.x * size.width}
-                  y={anno.y * size.height}
-                  text={anno.text}
-                  fill={anno.color}
-                  fontSize={anno.fontSize}
-                  fontFamily="Geist"
-                  fontStyle="600"
-                  draggable={activeTool === 'select'}
-                  onDragStart={handleDragStart}
-                  onDragEnd={(e) => handleDragEnd(e, anno.id)}
-                  onClick={(e) => handleAnnotationClick(e, anno.id)}
-                  onTap={(e) => handleAnnotationClick(e, anno.id)}
+                  key={anno.id} {...shadowProps} visible={isVisible}
+                  listening={canInteractWithAnnotations} x={anno.x * size.width} y={anno.y * size.height}
+                  text={anno.text} fill={anno.color} fontSize={anno.fontSize}
+                  fontFamily="Geist" fontStyle="600" draggable={activeTool === 'select'}
+                  onDragStart={(e) => e.target.moveToTop()} onDragEnd={(e) => handleDragEnd(e, anno.id)}
+                  onClick={(e) => handleAnnotationClick(e, anno.id)} onTap={(e) => handleAnnotationClick(e, anno.id)}
                   onPointerDown={(e) => {
                     if (activeTool === 'eraser') { e.cancelBubble = true; removeAnnotation(anno.id); }
                     else if (activeTool === 'select') { e.cancelBubble = true; setSelectedAnnotationId(anno.id); }
@@ -441,19 +298,14 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
             } else if (anno.type === 'math') {
               return (
                 <MathNode
-                  key={anno.id}
-                  annotation={{ ...anno, ...shadowProps, draggable: activeTool === 'select' }}
-                  size={size}
-                  responsiveScale={responsiveScale}
-                  listening={canInteractWithAnnotations}
-                  onDragStart={handleDragStart}
-                  onDragEnd={(e: any) => handleDragEnd(e, anno.id)}
+                  key={anno.id} annotation={{ ...anno, ...shadowProps, draggable: activeTool === 'select' }}
+                  size={size} responsiveScale={responsiveScale} listening={canInteractWithAnnotations}
+                  onDragStart={(e: any) => e.target.moveToTop()} onDragEnd={(e: any) => handleDragEnd(e, anno.id)}
                   onPointerDown={(e: any) => {
                     if (activeTool === 'eraser') { e.cancelBubble = true; removeAnnotation(anno.id); }
                     else if (activeTool === 'select') { e.cancelBubble = true; setSelectedAnnotationId(anno.id); }
                   }}
-                  onMouseEnter={() => { }}
-                  onMouseLeave={() => { }}
+                  onMouseEnter={() => { }} onMouseLeave={() => { }}
                 />
               );
             }
@@ -464,51 +316,17 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
       </Stage>
 
       {textInput && (
-        <div
-          className={cn(
-            "z-[1000] pointer-events-auto",
-            window.innerWidth < 768
-              ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] bg-white/90 backdrop-blur-2xl p-6 rounded-[32px] shadow-xl border border-white/40"
-              : "absolute bg-white/80 backdrop-blur-xl p-3 rounded-2xl shadow-xl border border-white/50"
-          )}
-          style={window.innerWidth < 768 ? {} : { top: `${textInput.y}px`, left: `${textInput.x}px`, transform: 'translate(-12px, -12px)' }}
-        >
-          <input
-            ref={textInputRef}
-            autoFocus
-            className="bg-transparent border-none outline-none font-bold text-[#1e293b] placeholder:text-slate-300 w-full"
-            style={{ fontSize: window.innerWidth < 768 ? 14 : (strokeWidth * 3 + 12), fontFamily: 'Geist' }}
-            placeholder="Type..."
-            value={textValue}
-            onChange={(e) => setTextValue(e.target.value)}
-            onBlur={handleTextSubmit}
-            onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
-          />
-        </div>
+        <TextInput
+          x={textInput.x} y={textInput.y} value={textValue}
+          strokeWidth={strokeWidth} onChange={setTextValue} onSubmit={handleTextSubmit}
+        />
       )}
 
       {mathInput && (
-        <div
-          className={cn(
-            "bg-white/90 backdrop-blur-3xl rounded-[32px] shadow-xl border border-white/50 flex flex-col gap-4 z-[1000] pointer-events-auto",
-            window.innerWidth < 768 ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] p-6" : "absolute p-6"
-          )}
-          style={window.innerWidth < 768 ? {} : { top: `${mathInput.y + 10}px`, left: `${mathInput.x}px`, transform: 'translateX(-50%)' }}
-        >
-          <input
-            ref={mathInputRef}
-            autoFocus
-            className="w-full bg-slate-100/40 border border-slate-200/50 outline-none px-5 py-4 rounded-2xl font-mono text-sm"
-            placeholder="e.g. E = mc^2"
-            value={mathValue}
-            onChange={(e) => setMathValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleMathSubmit()}
-          />
-          <div className="flex justify-end gap-3">
-            <button className="text-xs font-black uppercase tracking-widest px-4 py-2" onClick={() => setMathInput(null)}>Cancel</button>
-            <button className="text-xs font-black uppercase tracking-widest px-6 py-2 bg-[#1e293b] text-white rounded-xl" onClick={handleMathSubmit}>Apply</button>
-          </div>
-        </div>
+        <MathInput
+          x={mathInput.x} y={mathInput.y} value={mathValue}
+          onChange={setMathValue} onSubmit={handleMathSubmit} onCancel={() => setMathInput(null)}
+        />
       )}
     </div>
   );
