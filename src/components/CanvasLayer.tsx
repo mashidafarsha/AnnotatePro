@@ -90,6 +90,8 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   const [textValue, setTextValue] = useState('');
   const [mathInput, setMathInput] = useState<{ x: number, y: number } | null>(null);
   const [mathValue, setMathValue] = useState('');
+  const textInputRef = useRef<HTMLInputElement>(null);
+  const mathInputRef = useRef<HTMLInputElement>(null);
 
   const responsiveScale = React.useMemo(() => {
     return window.innerWidth < 768 ? 0.7 : 1;
@@ -98,7 +100,21 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   // Production Debug Logs
   useEffect(() => {
     console.log('CanvasLayer Engine Initialized. Active Tool:', activeTool);
+    if (activeTool !== 'text') setTextInput(null);
+    if (activeTool !== 'math') setMathInput(null);
   }, [activeTool]);
+
+  useEffect(() => {
+    if (textInput && textInputRef.current) {
+      textInputRef.current.focus();
+    }
+  }, [textInput]);
+
+  useEffect(() => {
+    if (mathInput && mathInputRef.current) {
+      mathInputRef.current.focus();
+    }
+  }, [mathInput]);
 
   useEffect(() => {
     console.log('Current Annotations Status:', annotations.length, 'entries');
@@ -159,7 +175,10 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     const pos = getRelativePointerPosition();
     if (!pos) return;
 
-    e.evt.preventDefault();
+    // Only prevent default if we are in a drawing tool to allow click events to bubble/fire for others
+    if (activeTool === 'pen' || activeTool === 'highlighter') {
+      e.evt.preventDefault();
+    }
     console.log('Production Stage Clicked:', pos);
 
     if (activeTool === 'pen' || activeTool === 'highlighter') {
@@ -234,19 +253,15 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     if (activeTool === 'select') {
       setSelectedAnnotationId(null);
     } else if (activeTool === 'text') {
-      setTimeout(() => {
-        if (!textInput) {
-          setTextInput({ x: pos.x, y: pos.y });
-          setTextValue('');
-        }
-      }, 100);
+      if (!textInput) {
+        setTextInput({ x: pos.x, y: pos.y });
+        setTextValue('');
+      }
     } else if (activeTool === 'math') {
-      setTimeout(() => {
-        if (!mathInput) {
-          setMathInput({ x: pos.x, y: pos.y });
-          setMathValue('');
-        }
-      }, 100);
+      if (!mathInput) {
+        setMathInput({ x: pos.x, y: pos.y });
+        setMathValue('');
+      }
     }
   };
 
@@ -436,9 +451,10 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
               ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] bg-white/90 backdrop-blur-2xl p-6 rounded-[32px] shadow-xl border border-white/40"
               : "absolute bg-white/80 backdrop-blur-xl p-3 rounded-2xl shadow-xl border border-white/50"
           )}
-          style={window.innerWidth < 768 ? {} : { top: textInput.y, left: textInput.x, transform: 'translate(-12px, -12px)' }}
+          style={window.innerWidth < 768 ? {} : { top: `${textInput.y}px`, left: `${textInput.x}px`, transform: 'translate(-12px, -12px)' }}
         >
           <input
+            ref={textInputRef}
             autoFocus
             className="bg-transparent border-none outline-none font-bold text-[#1e293b] placeholder:text-slate-300 w-full"
             style={{ fontSize: window.innerWidth < 768 ? 14 : (strokeWidth * 3 + 12), fontFamily: 'Geist' }}
@@ -457,9 +473,10 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
             "bg-white/90 backdrop-blur-3xl rounded-[32px] shadow-xl border border-white/50 flex flex-col gap-4 z-[1000] pointer-events-auto",
             window.innerWidth < 768 ? "fixed inset-x-0 top-1/4 mx-auto w-[85%] p-6" : "absolute p-6"
           )}
-          style={window.innerWidth < 768 ? {} : { top: mathInput.y + 10, left: mathInput.x, transform: 'translateX(-50%)' }}
+          style={window.innerWidth < 768 ? {} : { top: `${mathInput.y + 10}px`, left: `${mathInput.x}px`, transform: 'translateX(-50%)' }}
         >
           <input
+            ref={mathInputRef}
             autoFocus
             className="w-full bg-slate-100/40 border border-slate-200/50 outline-none px-5 py-4 rounded-2xl font-mono text-sm"
             placeholder="e.g. E = mc^2"
