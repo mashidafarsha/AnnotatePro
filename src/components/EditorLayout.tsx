@@ -32,6 +32,7 @@ const EditorLayout: React.FC = () => {
   }, []);
 
   const documentContainerRef = useRef<HTMLDivElement>(null);
+  const innerContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -160,6 +161,7 @@ const EditorLayout: React.FC = () => {
           )}
         >
           <div
+            ref={innerContainerRef}
             className={cn(
               "w-full bg-white rounded-[32px] lg:rounded-[24px] overflow-hidden relative transition-all duration-500",
               "shadow-[0_20px_50px_rgba(0,0,0,0.1)] lg:shadow-[0_8px_30px_rgba(0,0,0,0.04)]",
@@ -213,7 +215,7 @@ const EditorLayout: React.FC = () => {
                 </div>
               </div>
             )}
-            <CanvasLayer containerRef={documentContainerRef} />
+            <CanvasLayer containerRef={innerContainerRef} />
           </div>
         </motion.div>
       </main>

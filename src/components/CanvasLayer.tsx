@@ -104,6 +104,14 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
     console.log('Current Annotations Status:', annotations.length, 'entries');
   }, [annotations]);
 
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      console.log('Global MouseDown at:', e.clientX, e.clientY, 'Target:', e.target);
+    };
+    window.addEventListener('mousedown', handleGlobalClick);
+    return () => window.removeEventListener('mousedown', handleGlobalClick);
+  }, []);
+
   useLayoutEffect(() => {
     if (!containerRef.current) return;
     const updateSize = () => {
@@ -311,7 +319,7 @@ export const CanvasLayer: React.FC<CanvasLayerProps> = ({ containerRef }) => {
   return (
     <div
       className="absolute inset-0 z-[9999] pointer-events-auto"
-      style={{ touchAction: 'none', border: '2px dashed #ef4444' }}
+      style={{ touchAction: 'none', background: 'rgba(34, 197, 94, 0.08)', border: '2px dashed #22c55e' }}
     >
       <Stage
         ref={stageRef}
